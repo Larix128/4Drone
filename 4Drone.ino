@@ -28,12 +28,12 @@ void setup() {
   esc1.attach(esc1PIN);
   esc2.attach(esc2PIN);
   esc3.attach(esc3PIN);
-  //esc4.attach(esc4PIN);
+  esc4.attach(esc4PIN);
 
   esc1.write(30);
   esc2.write(30);
   esc3.write(30);
-  //esc4.write(30);
+  esc4.write(30);
   delay(2000);
 
   mpu.setup(0x68);  // change to your own address
@@ -42,19 +42,19 @@ void setup() {
 
 void loop() {
   if (mpu.update()) {
-    gyroX = (mpu.getEulerX()+0.5);
-    gyroY = (mpu.getEulerY()+1.5);
-    gyroZ = mpu.getEulerZ()/180;
+    gyroX = (mpu.getEulerX()+0.4);
+    gyroY = (mpu.getEulerY()+2.5);
+    gyroZ = mpu.getEulerZ();
     //Serial.print(gyroX);
     //Serial.print(" ");
     //Serial.print(gyroY);
     //Serial.println("");
   }
  
-  esc1.write(thro_input*100 + thro_input*(-gyroY) + thro_input*gyroX);
-  esc2.write(thro_input*100 + thro_input*(-gyroY) + thro_input*(-gyroX));
-  esc3.write(thro_input*100 + thro_input*gyroY + thro_input*(-gyroX));
-  //esc4.write(thro_input*100 + thro_input*gyroY + thro_input*gyroX);
+  esc1.write(thro_input*(150 - 0.25*gyroY + 0.25*gyroX)*0.75);//multiply by sensitivity
+  esc2.write(thro_input*(150 - 0.25*gyroY - 0.25*gyroX));//try change gyro interpolation (its linear right now)
+  esc3.write(thro_input*(150 + 0.25*gyroY - 0.25*gyroX));
+  esc4.write(thro_input*(150 + 0.25*gyroY + 0.25*gyroX));
 }
 
 
