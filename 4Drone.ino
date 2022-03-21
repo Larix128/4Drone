@@ -13,13 +13,15 @@ byte esc2PIN = 11;
 byte esc3PIN = 12;
 byte esc4PIN = 13;
 
-float gyroX; // -179.5 to 180.5
-float gyroY; // -178.5 to 181.5
-float gyroZ; // -180 to 180
+float gyroInfl = 20;
+
+float gyroX;
+float gyroY;
+float gyroZ;
 
 volatile int thro_input_raw; //throttle value; min 1104 max 1912 
-float thro_input; //throttle value corrected to 0-1 float
 volatile int prev_thro_time = 0; // time of last thro reading
+float thro_input; //throttle value corrected to 0-1 float
 
 void setup() {
   Serial.begin(115200);
@@ -42,19 +44,15 @@ void setup() {
 
 void loop() {
   if (mpu.update()) {
-    gyroX = (mpu.getEulerX()+0.4);
-    gyroY = (mpu.getEulerY()+2.5);
+    gyroX = 1/(1+pow(0.9, mpu.getEulerX()+0.4-15))-1/(1+pow(0.9, mpu.getEulerX()+0.4+15))+0.66;//modified to population growth interpolation curve
+    gyroY = 1/(1+pow(0.9, mpu.getEulerY()+2.5-15))-1/(1+pow(0.9, mpu.getEulerY()+2.5+15))+0.66;
     gyroZ = mpu.getEulerZ();
-    //Serial.print(gyroX);
-    //Serial.print(" ");
-    //Serial.print(gyroY);
-    //Serial.println("");
   }
  
-  esc1.write(thro_input*(150 - 0.25*gyroY + 0.25*gyroX)*0.75);//multiply by sensitivity
-  esc2.write(thro_input*(150 - 0.25*gyroY - 0.25*gyroX));//try change gyro interpolation (its linear right now)
-  esc3.write(thro_input*(150 + 0.25*gyroY - 0.25*gyroX));
-  esc4.write(thro_input*(150 + 0.25*gyroY + 0.25*gyroX));
+  esc1.write(thro_input*(150 + gyroInfl*(- gyroY + gyroX))*0.75);//multiply by sensitivity
+  esc2.write(thro_input*(150 + gyroInfl*(- gyroY - gyroX)));//try change gyro interpolation (its population growth right now)
+  esc3.write(thro_input*(150 + gyroInfl*(+ gyroY - gyroX)));
+  esc4.write(thro_input*(150 + gyroInfl*(+ gyroY + gyroX)));
 }
 
 
