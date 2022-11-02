@@ -6,6 +6,7 @@ MPU9250 mpu;
 //escs calibrated to servowrite(50-135)
 //need to implement angular bias to flight calc
 //need to correct/calibrate rc readings to be exact(0=lowest, 0.5=middle, 1=highest)
+//need to add failsafe to RC readings
 //       F
 //    1     2
 //      \ /
@@ -260,7 +261,18 @@ void calibrateESCs() {
   esc2.write(maxPower);
   esc3.write(maxPower);
   esc4.write(maxPower);
+
+
+  //failsafe
+  if (analogRead(A0)>800) {
+    failure = failsafeTreshold;
+    while (failure >= failsafeTreshold) {
+      Serial.println("FAILURE: powersource connected too soon");
+      delay (10);
+    }
+  }
   
+  Serial.println("please connect powersource");
   batteryWait();
   Serial.println("motors powered");
   
@@ -302,7 +314,8 @@ void calcGyro() { //get gyro data, 63rd measurement is used for calibration
         gyro.x = 0;
         gyro.y = 0;
         angBias = 0; //failsafe -> angle limit 0.5rad (28.6deg)
-        failure = failure + 1;;
+        failure = failure + 1;
+        Serial.println("FAILURE: angle limit exceeded")
       }
       else {
         angBias = 1/cos(gyro.x)*1/cos(gyro.y);
