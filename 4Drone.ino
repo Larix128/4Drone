@@ -315,7 +315,7 @@ void calcGyro() { //get gyro data, 63rd measurement is used for calibration
         gyro.y = 0;
         angBias = 0; //failsafe -> angle limit 0.5rad (28.6deg)
         failure = failure + 1;
-        Serial.println("FAILURE: angle limit exceeded")
+        Serial.println("FAILURE: angle limit exceeded");
       }
       else {
         angBias = 1/cos(gyro.x)*1/cos(gyro.y);
