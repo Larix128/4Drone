@@ -49,13 +49,12 @@ struct Vector3 currentAngle;
 
 //RC inputs
 volatile int ThroStart;
-volatile float Thro;//brown
 volatile int ElevStart;
-volatile float Elev;//yellow
 volatile int AileStart;
-volatile float Aile;//green
 volatile int RuddStart;
-volatile float Rudd;//orange
+
+struct RCInputs rc;
+
 
 struct RCThreshold thro;
 struct RCThreshold elev;
@@ -95,7 +94,7 @@ void setup() {
   esc4.attach(esc4PIN);
 
 
-  calibrateESCs();
+  //calibrateESCs();
   
   digitalWrite(LED_BUILTIN, HIGH);
   mpu.setup(0x68);  //gyro: change to my own address
@@ -107,6 +106,7 @@ void setup() {
   attachInterrupt(1, calcElev, CHANGE);
   attachInterrupt(4, calcAile, CHANGE);
   attachInterrupt(5, calcRudd, CHANGE); 
+  calibrateRC();
 }
 
 
@@ -121,7 +121,7 @@ void loop() {
   calcGyro();
   
   struct ESCs escs = {50, 50, 50, 50};
-  if (Thro != 0) {  //if throttle is 0 do not calculate (send 50 instead)
+  if (rc.Thro != 0) {  //if throttle is 0 do not calculate (send 50 instead)
     
     //===================================================================================
     // put flight calculation here; write results to escs.e1, escs.e2, escs.e3, escs.e4
@@ -158,25 +158,8 @@ void calcThro() {
     ThroStart = micros();
   }
   else {
-    Thro = float((uint16_t)(micros() - ThroStart));
-    
-    if (Thro < 1125) {//avoid unexpected underflow behavior & bottom cap
-      Thro = 0;
-    }
-    else {
-      Thro = Thro - 1125;
-    }
-
-    if(Thro > deltaThro + 100) { //failsafe
-      Thro = 0;
-      failure = failure + 1;
-    }
-    else if (Thro > deltaThro) { //top cap
-      Thro = 1;
-    }
-    else {
-      Thro = Thro/deltaThro; 
-    }
+    rc.Thro = (uint16_t)(micros() - ThroStart);
+    //Serial.println(rc.Thro);
   }
 }
 
@@ -185,25 +168,7 @@ void calcElev() {
     ElevStart = micros();
   }
   else {
-    Elev = float((uint16_t)(micros() - ElevStart));
-    
-    if (Elev < 1125) {//avoid unexpected underflow behavior & bottom cap
-      Elev = 0;
-    }
-    else {
-      Elev = Elev - 1125;
-    }
-
-    if(Elev > deltaElev + 100) { //failsafe
-      Elev = 0;
-      failure = failure + 1;
-    }
-    else if (Elev > deltaElev) { //top cap
-      Elev = 1;
-    }
-    else {
-      Elev = Elev/deltaElev; 
-    }
+    rc.Elev = (uint16_t)(micros() - ElevStart);
   }
 }
 
@@ -212,25 +177,7 @@ void calcAile() {
     AileStart = micros();
   }
   else {
-    Aile = float((uint16_t)(micros() - AileStart));
-    
-    if (Aile < 1125) {//avoid unexpected underflow behavior & bottom cap
-      Aile = 0;
-    }
-    else {
-      Aile = Aile - 1125;
-    }
-
-    if(Aile > deltaAile + 100) { //failsafe
-      Aile = 0;
-      failure = failure + 1;
-    }
-    else if (Aile > deltaAile) { //top cap
-      Aile = 1;
-    }
-    else {
-      Aile = Aile/deltaAile; 
-    }
+    rc.Aile = (uint16_t)(micros() - AileStart);
   }
 }
 
@@ -239,25 +186,7 @@ void calcRudd() {
     RuddStart = micros();
   }
   else {
-    Rudd = float((uint16_t)(micros() - RuddStart));
-    
-    if (Rudd < 1096) {//avoid unexpected underflow behavior & bottom cap
-      Rudd = 0;
-    }
-    else {
-      Rudd = Rudd - 1096;
-    }
-
-    if(Rudd > deltaRudd + 100) { //failsafe
-      Rudd = 0;
-      failure = failure + 1;
-    }
-    else if (Rudd > deltaRudd) { //top cap
-      Rudd = 1;
-    }
-    else {
-      Rudd = Rudd/deltaRudd; 
-    }
+    rc.Rudd = (uint16_t)(micros() - RuddStart);
   }
 }
 
@@ -317,34 +246,37 @@ void batteryWait() {   //wait until main powersource is connected
 // CALIBRATE RC
 //============================================================
 void calibrateRC() {
-  calibrateRCmin(&thro);
+  thro.minmin = 10000;
+  thro.minmax = -10000;
+  Serial.println(thro.minmax);
+  while (true){
+    Serial.println(thro.minmax);
+    calibrateRCx (rc.Thro, &thro.minmin, &thro.minmax);
+
+  } 
+  delay(1000); 
+  calibrateRCx (rc.Thro, &thro.medmin, &thro.medmax);
+  delay(1000);
+  calibrateRCx (rc.Thro, &thro.maxmin, &thro.maxmax);
 }
 
-void calibrateRCmin (struct RCThreshold *channel){
-  if (Thro < channel->minmin) {
-    channel->minmin = Thro;
+void calibrateRCx (int rcValue, int *min, int *max){
+  delay(1000);
+  Serial.println(rcValue);
+  Serial.print(*min);
+  Serial.print(" ");
+  Serial.println(*max);
+  if (rcValue < *min) {
+    min = rcValue;
+    Serial.println("A");
   }
-  if (Thro > channel->minmax) {
-    channel->minmax = Thro;
-  }
-}
+  else if (rcValue > *max) {
+    max = rcValue;
+        Serial.println("B");
 
-void calibrateRCmed (struct RCThreshold *channel){
-  if (Thro < channel->medmin) {
-    channel->medmin = Thro;
   }
-  if (Thro > channel->medmax) {
-    channel->medmax = Thro;
-  }
-}
-
-void calibrateRCmax (struct RCThreshold *channel){
-  if (Thro < channel->maxmin) {
-    channel->maxmin = Thro;
-  }
-  if (Thro > channel->maxmax) {
-    channel->maxmax = Thro;
-  }
+    
+    delay(10);
 }
 
 //============================================================
@@ -398,13 +330,13 @@ void failsafe(int cause) {
 //  DEBUG
 //============================================================
 void printRC() {
-  Serial.print(Thro);
+  Serial.print(rc.Thro);
   Serial.print(" ");
-  Serial.print(Elev);
+  Serial.print(rc.Elev);
   Serial.print(" ");
-  Serial.print(Aile);
+  Serial.print(rc.Aile);
   Serial.print(" ");
-  Serial.println(Rudd);
+  Serial.println(rc.Rudd);
 }
 void printESC(struct ESCs escs) {
   Serial.print(escs.e1);

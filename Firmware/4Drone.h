@@ -11,6 +11,13 @@ struct Vector3 {
   float z;
 };
 
+struct RCInputs {
+  volatile int Thro;//brown
+  volatile int Elev;//yellow
+  volatile int Aile;//green
+  volatile int Rudd;//orange
+};
+
 struct RCThreshold {
   int minmin;
   int minmax;
