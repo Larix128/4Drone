@@ -57,6 +57,12 @@ volatile float Aile;//green
 volatile int RuddStart;
 volatile float Rudd;//orange
 
+struct RCThreshold thro;
+struct RCThreshold elev;
+struct RCThreshold aile;
+struct RCThreshold rudd;
+
+
 
 int currentTime;
 
@@ -304,6 +310,40 @@ void calibrateESCs() {
 void batteryWait() {   //wait until main powersource is connected
   while(analogRead(A0)<800) {
     delay(10);
+  }
+}
+
+//============================================================
+// CALIBRATE RC
+//============================================================
+void calibrateRC() {
+  calibrateRCmin(thro);
+}
+
+void calibrateRCmin (){
+  if (Thro < thro.minmin) {
+    thro.minmin = Thro;
+  }
+  if (Thro > thro.minmax) {
+    thro.minmax = Thro;
+  }
+}
+
+void calibrateRCmed (){
+  if (Thro < thro.medmin) {
+    thro.medmin = Thro;
+  }
+  if (Thro > thro.medmax) {
+    thro.medmax = Thro;
+  }
+}
+
+void calibrateRCmax (){
+  if (Thro < thro.maxmin) {
+    thro.minmin = Thro;
+  }
+  if (Thro > thro.maxmax) {
+    thro.minmax = Thro;
   }
 }
 

@@ -11,13 +11,14 @@ struct Vector3 {
   float z;
 };
 
-//struct CorrectRC {
-//  float flat1;
-//  float rise1;
-//  float flat2;
-//  float rise2;
-//  float flat3;
-//};
+struct RCThreshold {
+  int minmin;
+  int minmax;
+  int medmin;
+  int medmax;
+  int maxmin;
+  int maxmax;
+};
 
 
 //print
@@ -33,7 +34,8 @@ void calcAile(); //interrupt, calculate input from RC
 void calcRudd(); //interrupt, calculate input from RC
 
 //calibration & setup
-//void calibrateRC();
+void calibrateRC();
+void calibrateRCmin ();
 void calibrateESCs(); // calibrate ESC to <50; 135> value range
 void batteryWait(); //wait until main powersource is connected
 
