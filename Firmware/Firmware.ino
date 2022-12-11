@@ -317,33 +317,33 @@ void batteryWait() {   //wait until main powersource is connected
 // CALIBRATE RC
 //============================================================
 void calibrateRC() {
-  calibrateRCmin(thro);
+  calibrateRCmin(&thro);
 }
 
-void calibrateRCmin (){
-  if (Thro < thro.minmin) {
-    thro.minmin = Thro;
+void calibrateRCmin (struct RCThreshold *channel){
+  if (Thro < channel->minmin) {
+    channel->minmin = Thro;
   }
-  if (Thro > thro.minmax) {
-    thro.minmax = Thro;
-  }
-}
-
-void calibrateRCmed (){
-  if (Thro < thro.medmin) {
-    thro.medmin = Thro;
-  }
-  if (Thro > thro.medmax) {
-    thro.medmax = Thro;
+  if (Thro > channel->minmax) {
+    channel->minmax = Thro;
   }
 }
 
-void calibrateRCmax (){
-  if (Thro < thro.maxmin) {
-    thro.minmin = Thro;
+void calibrateRCmed (struct RCThreshold *channel){
+  if (Thro < channel->medmin) {
+    channel->medmin = Thro;
   }
-  if (Thro > thro.maxmax) {
-    thro.minmax = Thro;
+  if (Thro > channel->medmax) {
+    channel->medmax = Thro;
+  }
+}
+
+void calibrateRCmax (struct RCThreshold *channel){
+  if (Thro < channel->maxmin) {
+    channel->maxmin = Thro;
+  }
+  if (Thro > channel->maxmax) {
+    channel->maxmax = Thro;
   }
 }
 
